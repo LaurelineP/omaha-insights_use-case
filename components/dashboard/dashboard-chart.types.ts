@@ -11,7 +11,8 @@ export interface InsightChart<TDataItem> {
   type: 'historical' | 'latest',
   header?: InsightChartHeader,
   tooltipConfig: ChartConfig,
-  XAxisKey: string,
+  XAxisKey: keyof TDataItem,
+  YAxisKey: keyof TDataItem,
 }
 
 
@@ -20,6 +21,7 @@ export interface ChartProps<TDataItem> {
   config: ChartConfig;
   cardHeader?: InsightChartHeader;
   XAxisKey: string;
+  YAxisKey: string;
   type: 'historical' | 'latest'
 };
 

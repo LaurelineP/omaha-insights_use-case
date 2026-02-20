@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Bar, BarChart, CartesianGrid, XAxis, Line, LineChart, YAxis } from "recharts"
+import { SetStateAction, useMemo, useState } from "react"
+import { Bar, BarChart, CartesianGrid, XAxis, Line, LineChart, YAxis, ReferenceLine } from "recharts"
 import {
   Card,
   CardContent,
@@ -17,6 +17,7 @@ import {
 
 import { getSumDetailsByKeys,  } from "./dashboard-chart.utils"
 import { ChartProps } from "./dashboard-chart.types"
+import { StatData } from "@/types/data.types"
 
 
 
@@ -31,13 +32,18 @@ export function InsightChart<IChartData>({
     config,
     cardHeader,
     XAxisKey,
+    YAxisKey,
     type = 'historical'
   }: ChartProps<IChartData>) {
     const [ activeChart, setActiveChart ] = useState<keyof typeof config>(cardHeader?.views[0] || '')
-    console.log('activeChart:', activeChart)
     const { Shape, ShapeChart } = getChartCoumpounds( type )
-
+    console.log('\n\ndata for chart:', data)
+    console.log('XAxisKey:', XAxisKey)
     const shouldSetHeader = cardHeader && data; // TODO: checks to satisfy expectation
+
+
+    const isHistorical = type === "historical"
+    const isLatest = type === "latest"
   return (
 
     <Card className="py-0">
@@ -51,47 +57,55 @@ export function InsightChart<IChartData>({
       <CardContent className="px-2 sm:p-6">
 
         <ChartContainer
-          config={config}
+          config={ config }
           className="aspect-auto h-62.5 w-full"
         >
           <ShapeChart
             accessibilityLayer
-            data={ data }
+            data = { data }
             margin={{ left: 12, right: 12 }}
             {...( type === "latest" && { layout: "vertical" })}
           >
             <CartesianGrid vertical={false} />
-            { type === 'historical' && (
-
+            {/* -------------------------------------------------------------------------- */
+            /*                        Line Chart - Axes Controller                        */
+            /* -------------------------------------------------------------------------- */}
+            { isHistorical && (
               <XAxis
                 dataKey       = { XAxisKey }
                 tickLine      = { false }
-                // axisLine      = { false }
                 tickMargin    = { 8 }
                 minTickGap    = { 32 }
-                // tickFormatter = { value => {
-                //   const date = new Date(value)
-                //   return date.toLocaleDateString( window.navigator.language, {
-                //     year: "numeric"
-                //   })
-                // }}
-                
                 />
             )}
 
-            { type === 'latest' && (
-              <>
-              <XAxis type="number" dataKey={XAxisKey}  />
-              <YAxis  dataKey={XAxisKey} />
-              </>
+           { /* -------------------------------------------------------------------------- */
+            /*                   Horizontal Bar Chart - Axes Controllers                  */
+            /* -------------------------------------------------------------------------- */}
+            
+            { isLatest && <ReferenceLine x={0} stroke="var(--muted-foreground)" /> }
+            { isLatest && <XAxis type="number" dataKey={XAxisKey} hide/> }
+            { isLatest && (
+              <YAxis
+                type="category"
+                dataKey={YAxisKey}
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                tickFormatter={(value, idx) => {
+                  if(idx === 0){ console.log('value tick y', value)}
+                  console.log(data[0])
+                  return value
+                }}
+              />
             )}
+
             <ChartTooltip
               content={
                 <ChartTooltipContent
                   className="w-37.5"
                   nameKey="views"
-                  labelFormatter={(value, x) => {
-                    console.log('x:', x)
+                  labelFormatter={(value) => {
                     return new Date(value).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
@@ -101,7 +115,7 @@ export function InsightChart<IChartData>({
                 />
               }
             />
-            <Shape dataKey={activeChart} fill={`var(--color-${activeChart})`} radius={2} type="natural"/>
+            <Shape dataKey={activeChart} fill={`var(--color-${activeChart})`} radius={4} type="natural"/>
           </ShapeChart>
         </ChartContainer>
 
@@ -111,7 +125,12 @@ export function InsightChart<IChartData>({
 }
 
 /** ChartCardHeader - Displays chart infos with ability to set views based on total insights  */
-export const ChartCardHeader = ({ activeChart, setActiveChart, cardHeader, data, config }) => {
+export const ChartCardHeader = ({ 
+  activeChart, setActiveChart, cardHeader, data, config
+}: {
+  activeChart: string;
+  setActiveChart: SetStateAction<string>;
+} & ChartProps<StatData>) => {
   /** Total Insights - total value per view */
   const infos = cardHeader?.views || null
   const total = useMemo(
@@ -139,7 +158,7 @@ export const ChartCardHeader = ({ activeChart, setActiveChart, cardHeader, data,
           {/* Card Header - Insights */}
           <div className="flex">
             {
-              infos?.map((key: number) => {
+              infos?.map((key: string) => {
                 const chart = key as keyof typeof config as string
                 return (
                   <button
@@ -153,7 +172,7 @@ export const ChartCardHeader = ({ activeChart, setActiveChart, cardHeader, data,
                     </span>
                     { total !== null && (
                       <span className="text-lg leading-none font-bold sm:text-3xl">
-                        {total?.[key as keyof typeof total] }
+                        {total?.[key as unknown as keyof typeof total] }
                       </span>
                     )}
                   </button>
@@ -174,18 +193,21 @@ export const ChartCardHeader = ({ activeChart, setActiveChart, cardHeader, data,
  * Handles 2 type of chart - bar and line
  */
 const getChartCoumpounds = ( type: 'historical' | 'latest' ) => {
-  const shapes =  {
-    historical: Line,
-    latest: Bar
+  const compounds = {
+    historical: { 
+      Shape: Line,
+      ShapeChart: LineChart,
+    },
+    latest: { 
+      Shape: Bar,
+      ShapeChart: BarChart,
+    }
   }
 
-  const chartShapes = {
-    historical: LineChart,
-    latest: BarChart
+  if( !compounds[ type ] ){
+    throw Error( 'Unknown type of chart. The value should be "historical" or "latest".')
   }
 
-  const Shape = shapes[ type ]
-  const ShapeChart = chartShapes[ type ]
-
-  return { Shape, ShapeChart }
+  const componentsToUse = compounds[ type ]
+  return componentsToUse
 }

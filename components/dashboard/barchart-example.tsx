@@ -1,7 +1,7 @@
 "use client"
 
 import { TrendingUp } from "lucide-react"
-import { Bar, BarChart, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, ReferenceLine, XAxis, YAxis } from "recharts"
 
 import {
   Card,
@@ -21,12 +21,93 @@ import {
 export const description = "A horizontal bar chart"
 
 const chartData = [
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 73 },
-  { month: "May", desktop: 209 },
-  { month: "June", desktop: 214 },
+//   { month: "January", desktop: 186 },
+//   { month: "February", desktop: 305 },
+//   { month: "March", desktop: 237 },
+//   { month: "April", desktop: 73 },
+//   { month: "May", desktop: 209 },
+//   { month: "June", desktop: 214 },
+
+    {
+        "company_id": 1877,
+        "RAGR": 0.45
+    },
+    {
+        "company_id": 1875,
+        "RAGR": 0.39
+    },
+    {
+        "company_id": 1864,
+        "RAGR": 0.3
+    },
+    {
+        "company_id": 1870,
+        "RAGR": 0.26
+    },
+    {
+        "company_id": 1876,
+        "RAGR": 0.24
+    },
+    {
+        "company_id": 1869,
+        "RAGR": 0.2
+    },
+    {
+        "company_id": 1872,
+        "RAGR": 0.19
+    },
+    {
+        "company_id": 1878,
+        "RAGR": 0.17
+    },
+    {
+        "company_id": 1863,
+        "RAGR": 0.15
+    },
+    {
+        "company_id": 1866,
+        "RAGR": 0.09
+    },
+    {
+        "company_id": 1865,
+        "RAGR": -0.01
+    },
+    {
+        "company_id": 1867,
+        "RAGR": -0.03
+    },
+    {
+        "company_id": 1874,
+        "RAGR": -0.03
+    },
+    {
+        "company_id": 1861,
+        "RAGR": -0.04
+    },
+    {
+        "company_id": 1860,
+        "RAGR": -0.05
+    },
+    {
+        "company_id": 1871,
+        "RAGR": -0.05
+    },
+    {
+        "company_id": 1879,
+        "RAGR": -0.05
+    },
+    {
+        "company_id": 1862,
+        "RAGR": -0.06
+    },
+    {
+        "company_id": 1873,
+        "RAGR": -0.08
+    },
+    {
+        "company_id": 1868,
+        "RAGR": -0.12
+    }
 ]
 
 const chartConfig = {
@@ -39,10 +120,12 @@ const chartConfig = {
 export function ChartBarHorizontal() {
   return (
     <Card>
+
       <CardHeader>
         <CardTitle>Bar Chart - Horizontal</CardTitle>
         <CardDescription>January - June 2024</CardDescription>
       </CardHeader>
+      
       <CardContent>
         <ChartContainer config={chartConfig}>
           <BarChart
@@ -53,20 +136,21 @@ export function ChartBarHorizontal() {
               left: -20,
             }}
           >
-            <XAxis type="number" dataKey="desktop" hide />
+            <ReferenceLine x={0} stroke="var(--muted-foreground)" />
+            <XAxis type="number" dataKey="RAGR"/>
             <YAxis
-              dataKey="month"
+              dataKey="company_id"
               type="category"
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
+            //   tickFormatter={(value) => `${value}`.slice(0, 3)}
             />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
-            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={5} />
+            <Bar dataKey="RAGR" fill="var(--color-desktop)" radius={5} />
           </BarChart>
         </ChartContainer>
       </CardContent>
