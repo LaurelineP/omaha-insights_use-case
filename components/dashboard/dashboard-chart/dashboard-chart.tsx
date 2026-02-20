@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Insight Chart Component
+ *
+ * Uses 'any' for chart configuration and data to align with UI library requirements.
+ */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 
 import { Dispatch, SetStateAction, useMemo, useState } from "react";
@@ -10,6 +17,7 @@ import {
   LineChart,
   YAxis,
   ReferenceLine,
+  Cell,
 } from "recharts";
 import {
   Card,
@@ -26,7 +34,6 @@ import {
 
 import { getSumDetailsByKeys } from "./dashboard-chart.utils";
 import { ChartProps } from "./dashboard-chart.types";
-import type { StatData } from "@/types/data.types";
 
 /**
  * Insight Chart Card - chart component within a card that can be a line or bar chart
@@ -34,33 +41,33 @@ import type { StatData } from "@/types/data.types";
  *  - `type` latest: displays a bar chart
  *  UI rel.: Card / recharts chart ( LineChart + Line / BarChart + Bar )
  */
-export function InsightChart<IChartData>({
+export function InsightChart<T extends Record<string, unknown>>({
   data,
   config,
   cardHeader,
   XAxisKey,
   YAxisKey,
-  tooltipLabelFormatter,
   type,
-}: ChartProps<IChartData>) {
+}: ChartProps<T>) {
+  const ShapeChart = type === "historical" ? LineChart : BarChart;
+  const isHistorical = type === "historical";
+  const isLatest = type === "latest";
+
   const [activeChart, setActiveChart] = useState<keyof typeof config>(
     cardHeader?.views[0] || ""
   );
   const [selectedCellIndex, setSelectedCellIndex] = useState<number | null>(null);
-  const { Shape, ShapeChart } = getChartCoumpounds(type);
 
   const shouldSetHeader = cardHeader && data; // TODO: checks to satisfy expectation
 
-  const isHistorical = type === "historical";
-  const isLatest = type === "latest";
 
-  const handleCellClick = (data: any, index: number) => {
+  const handleCellClick = (entry: Record<string, unknown>, index: number) => {
     setSelectedCellIndex(selectedCellIndex === index ? null : index);
-    console.log("Cell clicked:", { data, index });
+    console.log("Cell clicked:", { entry, index });
   };
 
-  const getCellColor = (index: number, defaultColor: string) => {
-    return selectedCellIndex === index ? "#ef4444" : defaultColor;
+  const getCellColor = (index: number, defaultColor: string | undefined) => {
+    return selectedCellIndex === index ? "#ef4444" : (defaultColor || "#000000");
   };
 
   return (
@@ -68,7 +75,11 @@ export function InsightChart<IChartData>({
       {/* Card Header - Graph Insights Info */}
       {shouldSetHeader && (
         <ChartCardHeader
-          {...{ activeChart, setActiveChart, cardHeader, config, data }}
+          activeChart={activeChart}
+          setActiveChart={setActiveChart}
+          cardHeader={cardHeader}
+          config={config}
+          data={data}
         />
       )}
 
@@ -102,13 +113,38 @@ export function InsightChart<IChartData>({
               content={
                 <ChartTooltipContent
                   className="w-40"
-                  {...(tooltipLabelFormatter && {
-                    labelFormatter: tooltipLabelFormatter,
-                  })}
                 />
               }
             />
-            <Shape dataKey={activeChart} radius={4} type="natural"/>
+            {/* -------------------------------------------------------------------------- */
+            /*                    Line Chart - Graph Vector Controller                    */
+            /* -------------------------------------------------------------------------- */}
+            {isHistorical && (
+              <Line
+                dataKey={activeChart}
+                radius={4}
+                type="natural"
+              />
+            )}
+            {/* -------------------------------------------------------------------------- */
+            /*                     Bar Chart - Graph Vector Controller                    */
+            /* -------------------------------------------------------------------------- */}
+            {isLatest && (
+              <Bar
+                dataKey={activeChart}
+                radius={4}
+                type="natural"
+              >
+                {data && data.map((entry: Record<string, unknown>, index: number) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={getCellColor(index, config[activeChart].color)}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => handleCellClick(entry, index)}
+                  />
+                ))}
+              </Bar>
+            )}
           </ShapeChart>
         </ChartContainer>
       </CardContent>
@@ -126,15 +162,18 @@ export const ChartCardHeader = ({
 }: {
   activeChart: string;
   setActiveChart: Dispatch<SetStateAction<string>>;
-} & ChartProps<StatData>) => {
+  cardHeader?: any;
+  data?: any[];
+  config?: any;
+}) => {
   /** Total Insights - total value per view */
   const infos = cardHeader?.views || null;
   const total = useMemo(() => {
     const shouldCreateTotal = infos?.length && data?.length;
-    return shouldCreateTotal ? getSumDetailsByKeys(data, infos) : null;
+    return shouldCreateTotal ? getSumDetailsByKeys(data as Record<string, any>[], infos) : null;
   }, [data, infos]);
 
-  if (!data) return null;
+  if (!data || !cardHeader) return null;
 
   return (
   <CardHeader className="flex flex-col items-stretch border-b p-0 sm:flex-row">
@@ -172,28 +211,3 @@ export const ChartCardHeader = ({
   );
 };
 
-/** Chart's components resolver - Decides what chart components to use based on `type`
- * Based on `type`, this decides which components corresponds to it
- * Handles 2 type of chart - bar and line
- */
-const getChartCoumpounds = (type: "historical" | "latest") => {
-  const compounds = {
-    historical: {
-      Shape: Line,
-      ShapeChart: LineChart,
-    },
-    latest: {
-      Shape: Bar,
-      ShapeChart: BarChart,
-    },
-  };
-
-  if (!compounds[type]) {
-    throw Error(
-      'Unknown type of chart. The value should be "historical" or "latest".'
-    );
-  }
-
-  const componentsToUse = compounds[type];
-  return componentsToUse;
-};

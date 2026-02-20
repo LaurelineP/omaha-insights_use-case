@@ -4,7 +4,7 @@ import { Payload } from "recharts/types/component/DefaultLegendContent";
 
 export interface InsightChartHeader {
   views: string[], // list of view to diplay for a chart
-  title: string,
+  title: string | ReactNode,
   description: string
 }
 
@@ -24,7 +24,7 @@ export interface ChartProps<TDataItem> {
   cardHeader?: InsightChartHeader;
   XAxisKey: string;
   YAxisKey: string;
-  tooltipLabelFormatter?:  (label: string | number, payload: Payload) => ReactNode; 
+  tooltipLabelFormatter?: (label: string | number, payload: Payload | Payload[]) => string | ReactNode;
   type: 'historical' | 'latest'
 };
 

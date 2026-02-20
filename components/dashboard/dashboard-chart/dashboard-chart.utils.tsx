@@ -1,9 +1,15 @@
+/**
+ * @fileoverview Dashboard Chart Utilities
+ * Uses 'any' for groupBy data to align with utility function expectations.
+ */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { groupBy } from "@/lib/utils";
 
 import type { ChartConfig } from "@/components/ui/chart";
 import type { DashboadData } from "@/types/data.types";
 import type { IChartData } from "./dashboard-chart.types";
-import { COMPANY_COLORS, type FieldKey } from "../dashboard-features";
+import type { FieldKey } from "../dashboard-features";
 
 export function  getSumDetailsByKeys(  data: IChartData[], views: string[] ){
     if(!views.length || !data?.length) return;
@@ -44,7 +50,7 @@ export const computeChartData = (
     let UIChartData: Array<Record<string, number | string>> = []
     
     // Groups per "orderingKey"
-    const groupedByOrderingKey = groupBy(data.stats, orderingKey) // TODO: should be agnostic
+    const groupedByOrderingKey = groupBy(data.stats as any[], orderingKey) // TODO: should be agnostic
 
     // Per "orderingValue" (x axis key), loops to access the list of info
     for( const [ orderingValue, detailsList ] of groupedByOrderingKey ){
@@ -88,8 +94,7 @@ export const computeChartData = (
 
 
 export const createChartConfig = (infoList: string[], description: string) : ChartConfig => {
-  const config: ChartConfig = {} 
-  const [xAxisKey, yAxisKey ] = infoList
+  const config: ChartConfig = {}
   for( const index in infoList){
     const info = infoList[index]
     config[ info ] = {

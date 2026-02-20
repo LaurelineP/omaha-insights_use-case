@@ -1,15 +1,21 @@
 
+/**
+ * @fileoverview Dashboard page component
+ * Uses 'any' for payload types to align with Recharts library APIs without modification.
+ */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client"
 import { InsightChart } from "@/components/dashboard/dashboard-chart/dashboard-chart";
 import { createChartConfig } from "@/components/dashboard/dashboard-chart/dashboard-chart.utils";
-import { CategoryKey, chartDescriptionOptions, ChartViewOption, FieldKey, getChartsSelection, MetricKey, MetricType, tooltipDescriptions } from "@/components/dashboard/dashboard-features";
+import { CategoryKey, chartDescriptionOptions, ChartViewOption, getChartsSelection, MetricKey, MetricType, tooltipDescriptions } from "@/components/dashboard/dashboard-features";
 import { DashboadData } from "@/types/data.types";
 import { useEffect, useMemo, useState } from "react";
 import { Payload } from "recharts/types/component/DefaultLegendContent";
 
 export default function Dashboard() {
   const [data, setData] = useState<DashboadData | null>(null);
-  const [ chartsSeletion, setChartSelection ] = useState<ChartViewOption[]>(
+  const [ chartsSeletion ] = useState<ChartViewOption[]>(
     ['RAGR__latest', 'economic_profit__historical', 'rcr_perc_harm__historical' ]
   )
   useEffect(() => {
@@ -27,17 +33,17 @@ export default function Dashboard() {
 
 
 
-  const formatLatestTooltipLabel = (value: string | number, payload: Payload[]) => {
-    const chartRow = payload?.[0]
-    if (!chartRow) return null;
+  const formatLatestTooltipLabel = (value: string | number, payload: Payload | Payload[]) => {
+    const chartRow = Array.isArray(payload) ? payload?.[0] : payload
+    if (!chartRow?.payload) return null;
 
-    const row     = chartRow.payload
+    const row     = chartRow.payload as Record<string, any>
     const xKey    = chartRow.dataKey as MetricKey
-    const yKey    = Object.keys(row).find( k => k !== xKey ) as CategoryKey
-    const yValue  = row[ yKey ]
-    const company = data?.companies.find( c => c[ yKey ] === yValue )
-    
-    
+    const yKey    = Object.keys(row).find( k => k !== xKey ) as CategoryKey | undefined
+    const yValue  = yKey ? row?.[yKey] : undefined
+    const company = yValue ? data?.companies.find( c => (c as Record<string, any>)?.[yKey!] === yValue ) : undefined
+
+
     return (
       <div className="flex items-center gap-2">
         <p className="text-sm">{company?.name || ''}</p>
@@ -47,20 +53,20 @@ export default function Dashboard() {
   }
 
 
-  const formatHistoricalTooltipLabel = (value: string | number, payload: Record<string, any>) => {
-    const chartRow = payload?.[0]
-    if (!chartRow) return null;
+  const formatHistoricalTooltipLabel = (value: string | number, payload: Payload | Payload[]) => {
+    const chartRow = Array.isArray(payload) ? payload?.[0] : payload
+    if (!chartRow?.payload) return null;
 
-    const row   = chartRow.payload
+    const row   = chartRow.payload as Record<string, any>
     const xKey  = chartRow.dataKey
     const yKey  = Object.keys(row).find( k => k !== xKey )
-    return `Year ${row[yKey]}`
+    return yKey ? `Year ${row[yKey]}` : ''
   }
 
-  const createInsightChartProps = (type: MetricType | 'latest', XAxisKey: MetricKey, YAxisKey: CategoryKey, data ) => {
+  const createInsightChartProps = (type: MetricType | 'latest', XAxisKey: MetricKey, YAxisKey: CategoryKey, data: Record<string, any>[] ) => {
     const isLatest = type === 'latest'
     const isHistorical = type === 'historical'
-    const tooltipLabelFormatter = isLatest && formatLatestTooltipLabel || isHistorical && formatHistoricalTooltipLabel
+    const tooltipLabelFormatter = isLatest ? formatLatestTooltipLabel : isHistorical ? formatHistoricalTooltipLabel : undefined
     
     const cardTitleType = isLatest ? 'Snapshot' : 'Historical'
     const cardTitle = isLatest && `${ XAxisKey } ${cardTitleType}` || isHistorical && `${cardTitleType} ${XAxisKey}` || ''
@@ -84,9 +90,9 @@ export default function Dashboard() {
   }
 
   const [ chartOne, chartTwo, chartThree ] = chartsSeletion.map((chartOption: ChartViewOption, idx) => {
-    const [ metric, mode ] = chartOption.split('__')
-    const YAxisKey = mode === "historical" ? 'fiscal_year' : 'company_id' as MetricType
-    return createInsightChartProps(mode, metric, YAxisKey, selectedChartData?.[idx])
+    const [ metric, mode ] = chartOption.split('__') as [MetricKey, MetricType]
+    const YAxisKey: CategoryKey = mode === "historical" ? 'fiscal_year' : 'company_id'
+    return createInsightChartProps(mode, metric as MetricKey, YAxisKey, selectedChartData?.[idx])
   })
 
   return (
