@@ -1,6 +1,6 @@
 import DashboardSidebar from "@/components/dashboard/dashboard-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { DashboardProvider, DashboardContext } from "@/context/dashboard.context";
+import { DashboardProvider } from "@/context/dashboard.context";
 
 
 
@@ -10,8 +10,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <SidebarProvider
                 style={
                     {
-                    "--sidebar-width": "20rem",
-                    "--sidebar-width-mobile": "20rem",
+                    "--sidebar-width": "24rem",
+                    "--sidebar-width-mobile": "24rem",
                     } as React.CSSProperties
                 }
             >

@@ -10,96 +10,126 @@ import type { DashboadData } from "@/types/data.types";
 import type { IChartData } from "./dashboard-chart.types";
 import type { FieldKey } from "../dashboard-features";
 
-export function  getSumDetailsByKeys(  data: IChartData[], views: string[] ){
-    if(!views.length || !data?.length) return;
-    
-    /** Init Views details */
-    const _views : Record<string, number> = {}
+const PERCENT_METRICS = ["rcr_perc_harm", "RAGR"];
 
-    /* Builds splitted views */
-    for (const view of views){
-        for( const dataItem of data){
+/** Get metric details - averages percent metrics, sums others */
+export function getMetricDetailsByKeys(data: IChartData[], views: string[]) {
+  if (!views.length || !data?.length) return;
 
-            /* Sets property in _views */
-            if( !_views.hasOwnProperty( view ) ){
-                _views[ view ] = 0
-            }
+  const _views: Record<string, number> = {};
 
-            /* Sums number value from data with the view key */
-            if( typeof dataItem[ view ] === 'number' ){
-                _views[ view ] += dataItem[ view ]
-            }
-        }
-        _views[ view ] =  Number(_views[ view ].toFixed(2))
+  for (const view of views) {
+    let sum = 0;
+    let count = 0;
+
+    for (const dataItem of data) {
+      if (typeof dataItem[view] === "number") {
+        sum += dataItem[view];
+        count++;
+      }
     }
-    return _views
+
+    // Average percent metrics, sum others
+    const isPercentMetric = PERCENT_METRICS.includes(view);
+    _views[view] = isPercentMetric && count > 0 ? sum / count : sum;
+  }
+  return _views;
 }
 
+export function getSumDetailsByKeys(data: IChartData[], views: string[]) {
+  if (!views.length || !data?.length) return;
+
+  /** Init Views details */
+  const _views: Record<string, number> = {};
+
+  /* Builds splitted views */
+  for (const view of views) {
+    for (const dataItem of data) {
+      /* Sets property in _views */
+      if (!_views.hasOwnProperty(view)) {
+        _views[view] = 0;
+      }
+
+      /* Sums number value from data with the view key */
+      if (typeof dataItem[view] === "number") {
+        _views[view] += dataItem[view];
+      }
+    }
+    _views[view] = Number(_views[view].toFixed(2));
+  }
+  return _views;
+}
 
 /** Compute App raw data to chart data (line or bar charts)
  * - reorganize and manipulate data
- * - computed chart data base on params
-*/
+ * - compute charts' data base on params
+ */
 export const computeChartData = (
-    data: DashboadData,
-    orderingKey: FieldKey,
-    computorKey: FieldKey,
-    operation: 'average' | 'latest'
-)=> {
-    let UIChartData: Array<Record<string, number | string>> = []
-    
-    // Groups per "orderingKey"
-    const groupedByOrderingKey = groupBy(data.stats, orderingKey)
+  data: DashboadData,
+  orderingKey: FieldKey,
+  computorKey: FieldKey,
+  operation: "average" | "latest"
+) => {
+  let UIChartData: Array<Record<string, number | string>> = [];
 
-    // Per "orderingValue" (x axis key), loops to access the list of info
-    for( const [ orderingValue, detailsList ] of groupedByOrderingKey ){
-        if ( !detailsList?.length ){ 
-            UIChartData.push({[ orderingKey ]: orderingValue })
-            continue
-        }
+  // Groups per "orderingKey"
+  const groupedByOrderingKey = groupBy(data.stats, orderingKey);
 
-        // From the info list, sums the values of `computorKey` (y axis key)
-        const summedValue = detailsList.reduce(
-            (acc: number, curr: { [x: string]: number; }) => acc += (curr[computorKey] ?? 0)
-        , 0 )
-
-        const operations = {
-            average: detailsList.length ? summedValue / detailsList.length : 0,
-            latest: detailsList.at(-1)[ computorKey ]
-        }
-
-        
-        // Format to data chart
-        const UIChartDatum = {
-            [orderingKey]: orderingValue,
-            [computorKey]: operations[ operation ],
-        }
-
-        UIChartData.push(UIChartDatum)
+  // Per "orderingValue" (x axis key), loops to access the list of info
+  for (const [orderingValue, detailsList] of groupedByOrderingKey) {
+    if (!detailsList?.length) {
+      UIChartData.push({ [orderingKey]: orderingValue });
+      continue;
     }
 
-    if(operation === 'latest'){
-        UIChartData = UIChartData.sort((a, b ) => {
-            if ( typeof b[ computorKey ] === 'number' && typeof a[ computorKey ] === "number"){
-                return b[ computorKey ] - a[ computorKey ]
-            }
-            return 0
-        })
-    }
+    // From the info list, sums the values of `computorKey` (y axis key)
+    const summedValue = detailsList.reduce(
+      (acc: number, curr: { [x: string]: number }) =>
+        (acc += curr[computorKey] ?? 0),
+      0
+    );
 
-    return UIChartData
-}
+    const operations = {
+      average: detailsList.length ? summedValue / detailsList.length : 0,
+      latest: detailsList.at(-1)[computorKey],
+    };
 
+    // Format to data chart
+    const UIChartDatum = {
+      [orderingKey]: orderingValue,
+      [computorKey]: operations[operation],
+    };
 
-export const createChartConfig = (infoList: string[], description: string) : ChartConfig => {
-  const config: ChartConfig = {}
-  for( const index in infoList){
-    const info = infoList[index]
-    config[ info ] = {
-      label: info.replaceAll(/[-_]/g, ' '),
-      color: 'var(--chart-3)',
+    UIChartData.push(UIChartDatum);
+  }
+
+  if (operation === "latest") {
+    UIChartData = UIChartData.sort((a, b) => {
+      if (
+        typeof b[computorKey] === "number" &&
+        typeof a[computorKey] === "number"
+      ) {
+        return b[computorKey] - a[computorKey];
+      }
+      return 0;
+    });
+  }
+
+  return UIChartData;
+};
+
+export const createChartConfig = (
+  infoList: string[],
+  description: string
+): ChartConfig => {
+  const config: ChartConfig = {};
+  for (const index in infoList) {
+    const info = infoList[index];
+    config[info] = {
+      label: info.replaceAll(/[-_]/g, " "),
+      color: "var(--chart-3)",
     }
   }
-  config.views = { label: description }
-  return config
-}
+  config.views = { label: description };
+  return config;
+};

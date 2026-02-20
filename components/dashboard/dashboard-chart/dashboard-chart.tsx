@@ -1,13 +1,13 @@
 /**
  * @fileoverview Insight Chart Component
- *
  * Uses 'any' for chart configuration and data to align with UI library requirements.
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 "use client";
+import { Plug2Icon } from "lucide-react";
 
-import { Dispatch, SetStateAction, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -18,6 +18,7 @@ import {
   YAxis,
   ReferenceLine,
   Cell,
+  Legend,
 } from "recharts";
 import {
   Card,
@@ -32,8 +33,9 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-import { getSumDetailsByKeys } from "./dashboard-chart.utils";
+import { getMetricDetailsByKeys } from "./dashboard-chart.utils";
 import { ChartProps } from "./dashboard-chart.types";
+import { COMPANY_COLORS, formatMetricValue } from "@/components/dashboard/dashboard-features";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
@@ -42,10 +44,9 @@ import { Skeleton } from "@/components/ui/skeleton";
  *  - `type` latest: displays a bar chart
  *  UI rel.: Card / recharts chart ( LineChart + Line / BarChart + Bar )
  */
-export function InsightChart<T extends Record<string, unknown>>(props: ChartProps<T>) {
-
-  if(!props?.data) return <ChartSkeleton />
-
+export function InsightChart<T extends Record<string, unknown>>(
+  props: ChartProps<T>
+) {
   const {
     data,
     config,
@@ -54,54 +55,43 @@ export function InsightChart<T extends Record<string, unknown>>(props: ChartProp
     YAxisKey,
     type,
     tooltipLabelFormatter,
-  } = props
-
-
+    valueFormatter,
+  } = props;
 
   const ShapeChart = type === "historical" ? LineChart : BarChart;
   const isHistorical = type === "historical";
   const isLatest = type === "latest";
 
-  const [activeChart, setActiveChart] = useState<keyof typeof config>(
-    cardHeader?.views[0] || ""
-  );
-  const [selectedCellIndex, setSelectedCellIndex] = useState<number | null>(null);
-
-  const shouldSetHeader = cardHeader && data; // TODO: checks to satisfy expectation
-
-
-  const handleCellClick = (entry: Record<string, unknown>, index: number) => {
-    setSelectedCellIndex(selectedCellIndex === index ? null : index);
-    console.log("Cell clicked:", { entry, index });
+  const shouldSetHeader = cardHeader && data?.length;
+  const getCellColor = (entry: Record<string, unknown>, index: number) => {
+    const companyId = entry[YAxisKey] as number;
+    return COMPANY_COLORS[companyId] ?? config?.[XAxisKey]?.color ?? "#000000";
   };
 
-  const getCellColor = (index: number, defaultColor: string | undefined) => {
-    return selectedCellIndex === index ? "#ef4444" : (defaultColor || "#000000");
-  };
+  return data?.length ? (
+    <Card className="py-0 h-full">
 
-  return (
-    <Card className="py-0">
       {/* Card Header - Graph Insights Info */}
       {shouldSetHeader && (
         <ChartCardHeader
-          activeChart={activeChart}
-          setActiveChart={setActiveChart}
           cardHeader={cardHeader}
           config={config}
           data={data}
+          valueFormatter={valueFormatter}
         />
       )}
 
       {/* Card Content - Graph */}
-      <CardContent className="px-2 sm:p-6">
-        <ChartContainer config={config} className="aspect-auto h-62.5 w-full">
+      <CardContent className="px-2 sm:p-6 flex flex-1 min-h-0 overflow-hidden">
+        <ChartContainer config={config} className="aspect-auto w-full">
           <ShapeChart
+            className="h-full"
             accessibilityLayer
             data={data}
-            margin={{ left: 12, right: 12 }}
+            margin={{ top: 12, bottom: 12, left: 12, right: 12 }}
             {...(type === "latest" && { layout: "vertical" })}
           >
-            <CartesianGrid vertical={false} />
+            <CartesianGrid vertical={false} strokeDasharray="3 3" />
             {/* -------------------------------------------------------------------------- */
             /*                        Line Chart - Axes Controller                        */
             /* -------------------------------------------------------------------------- */}
@@ -111,9 +101,7 @@ export function InsightChart<T extends Record<string, unknown>>(props: ChartProp
             /*                   Horizontal Bar Chart - Axes Controllers                  */
             /* -------------------------------------------------------------------------- */}
 
-            {isLatest && (
-              <ReferenceLine x={0} stroke="var(--muted-foreground)" />
-            )}
+            {isLatest && (<ReferenceLine x={0} stroke="var(--muted-foreground)" /> )}
             {isLatest && <XAxis type="number" dataKey={XAxisKey} hide />}
             {isLatest && <YAxis type="category" dataKey={YAxisKey} hide />}
 
@@ -122,120 +110,113 @@ export function InsightChart<T extends Record<string, unknown>>(props: ChartProp
               content={
                 <ChartTooltipContent
                   className="w-40"
-                  {...(tooltipLabelFormatter && {
-                    labelFormatter: tooltipLabelFormatter,
-                  })}
+                  {...(tooltipLabelFormatter && { labelFormatter: tooltipLabelFormatter })}
+                  {...(valueFormatter && { formatter: (value) => valueFormatter(value as number) })}
                 />
               }
             />
             {/* -------------------------------------------------------------------------- */
             /*                    Line Chart - Graph Vector Controller                    */
             /* -------------------------------------------------------------------------- */}
-            {isHistorical && (
-              <Line
-                dataKey={activeChart}
-                radius={4}
-                type="natural"
-              />
-            )}
+            {isHistorical && ( <Line dataKey={XAxisKey} radius={4} type="natural" /> )}
+
             {/* -------------------------------------------------------------------------- */
             /*                     Bar Chart - Graph Vector Controller                    */
             /* -------------------------------------------------------------------------- */}
             {isLatest && (
-              <Bar
-                dataKey={activeChart}
-                radius={4}
-                type="natural"
-              >
-                {data && data.map((entry: Record<string, unknown>, index: number) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={getCellColor(index, config[activeChart].color)}
-                    style={{ cursor: "pointer" }}
-                    onClick={() => handleCellClick(entry, index)}
-                  />
-                ))}
+              <Bar dataKey={XAxisKey} radius={4} type="natural" activeBar>
+                {data?.map(
+                  (entry: Record<string, unknown>, index: number) => (
+                      <Cell
+                        key       = {`cell-${ index }`}
+                        className = "opacity-70"
+                        fill      = { getCellColor( entry, index )}
+                        style     = {{ cursor: "pointer" }}
+                      />
+                    )
+                )}
               </Bar>
             )}
+            <Legend />
           </ShapeChart>
         </ChartContainer>
       </CardContent>
+
     </Card>
+  ) : (
+    <ChartSkeleton />
   );
 }
 
-/** ChartCardHeader - Displays chart infos with ability to set views based on total insights  */
+/** ChartCardHeader - Displays chart title, description, and the single metric total */
 export const ChartCardHeader = ({
-  activeChart,
-  setActiveChart,
   cardHeader,
   data,
-  config,
+  valueFormatter,
 }: {
-  activeChart: string;
-  setActiveChart: Dispatch<SetStateAction<string>>;
   cardHeader?: any;
   data?: any[];
   config?: any;
+  valueFormatter?: (value: number) => string;
 }) => {
-  /** Total Insights - total value per view */
-  const infos = cardHeader?.views || null;
+  const key: string | undefined = cardHeader?.views?.[0];
   const total = useMemo(() => {
-    const shouldCreateTotal = infos?.length && data?.length;
-    return shouldCreateTotal ? getSumDetailsByKeys(data as Record<string, any>[], infos) : null;
-  }, [data, infos]);
+    if (!key || !data?.length) return null;
+    return getMetricDetailsByKeys(data as Record<string, any>[], [key]);
+  }, [data, key]);
 
-  if (!data || !cardHeader) return null;
+  const displayValue = total && key
+    ? (valueFormatter
+        ? valueFormatter(total[key as keyof typeof total] as number)
+        : formatMetricValue(key, total[key as keyof typeof total] as number))
+    : null;
 
   return (
-    <CardHeader className="flex flex-col items-stretch border-b p-0 sm:flex-row">
-          <div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:py-0">
-            <CardTitle>{cardHeader.title}</CardTitle>
-            <CardDescription>{cardHeader.description}</CardDescription>
-          </div>
+    <CardHeader className="flex flex-col items-stretch border-b p-0! sm:flex-row max-h-23 overflow-hidden">
+      <div className="flex flex-1 min-w-0 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:py-0">
+        <CardTitle className="truncate">{cardHeader.title}</CardTitle>
+        <CardDescription className="line-clamp-2">{cardHeader.description}</CardDescription>
+      </div>
 
-          {/* Card Header - Insights */}
-          <div className="flex">
-            {infos?.map((key: string) => {
-              const chart = key as keyof typeof config as string;
-              return (
-                <button
-                  key={chart}
-                  data-active={activeChart === chart}
-                  className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col
-                    justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0
-                    sm:border-l sm:px-8 sm:py-6"
-                  onClick={() => setActiveChart(chart)}
-                >
-                  <span className="text-muted-foreground text-xs">
-                    {config[chart].label}
-                  </span>
-                  {total !== null && (
-                    <span className="text-lg leading-none font-bold sm:text-3xl">
-                      {total?.[key as unknown as keyof typeof total]}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </CardHeader>
+      {/* Card Header - Metric total */}
+      {key && (
+        <div className="flex w-37.5 flex-col justify-center gap-1 overflow-hidden border-t sm:border-t-0 sm:border-l sm:px-4 sm:py-6">
+          <span className="text-muted-foreground text-xs text-wrap">
+            {cardHeader.insightLabel}
+          </span>
+          {total !== null && (
+            <span className="leading-none font-bold text-xl text-wrap">
+              {displayValue}
+            </span>
+          )}
+        </div>
+      )}
+    </CardHeader>
   );
 };
 
+/** Skeleton for chart card when no data are available*/
 export const ChartSkeleton = () => {
-  return <Card className="flex relative h-full">
-      <CardHeader className="flex h-1/3">
-        <Skeleton className="w-2/3 h-full"/>
-        <Skeleton className="w-1/3 h-full"/>
-      </CardHeader>
-      <CardContent className="px-6 w-full h-full">
-        <Skeleton className="relative h-full flex">
-        <p className="absolute mt-[15%] mx-[32%] text-gray-400">
-          Awaiting for chart data ...
-        </p>
-          </Skeleton>
-        
-      </CardContent>
-  </Card>
-}
+  return (
+    <Card className="h-full bg-gray-50 p-0 m-0 gap-0 overflow-hidden">
+      <div className="flex flex-row items-stretch border-b max-h-23">
+        <div className="flex flex-1 flex-col justify-center gap-2 px-6 py-4">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-3.5 w-52" />
+        </div>
+        <div className="flex w-37.5 flex-col justify-center gap-2 overflow-hidden border-l px-4 py-6">
+          <Skeleton className="h-3 w-3/4" />
+          <Skeleton className="h-6 w-full" />
+        </div>
+      </div>
+
+      <Skeleton className="text-sm m-2 text-gray-400 h-full">
+        <div className="flex flex-col items-center justify-center mt-[10vh] text-center px-8">
+          <Plug2Icon strokeWidth={1.4} className="animate-bounce"/>
+          <span>Select a metric to display the chart</span>
+        </div>
+      </Skeleton>
+
+    </Card>
+  );
+};

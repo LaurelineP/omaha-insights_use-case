@@ -2,28 +2,43 @@
 import { DashboadData } from "@/types/data.types"
 import { computeChartData } from "./dashboard-chart/dashboard-chart.utils"
 
-
-// Possibilities Selection
-/**
- * 1. RAGR__historical
- * 2. RAGR__latest
- * 3. economic_profit__historical
- * 4. economic_profit__latest
- * 5. rcr_perc_harm__historical
- * 6. rcr_perc_harm__latest
+/* ------------------------------------ - ----------------------------------- */
+/* -------------------------------------------------------------------------- *
+ *                 * Business Features decisions code related                 *
+ * -------------------------------------------------------------------------- *
+ *      Represents known key points and data to consume for the 
+ *      Metric View Dashboard 
+ *      ( list of metric to visualize, constants to use, maps, texts... )
+ * 
+ * ------------------------------------ - -----------------------------------
+ *  1️⃣ Patterns to know
+ *  - Decision on data recognition: Combining <metric>__<time scope>
+ *  - Uses "__" separator to build or split the metrics
+ * 
+ * 
+ *  2️⃣ Metric Selection possibilities - based on time scope:
+ *  - "latest" focusing on last year data for a company
+ *  - "historical" focusing on entries per year
+ *       1. RAGR__historical
+ *       2. RAGR__latest
+ *       3. economic_profit__historical
+ *       4. economic_profit__latest
+ *       5. rcr_perc_harm__historical
+ *       6. rcr_perc_harm__latest
  */
-export type CategoryKey = 
-    | 'company_id'
-    | 'fiscal_year'
 
 export type MetricKey =
     | "RAGR"
     | "economic_profit"
     | "rcr_perc_harm";
 
-export type MetricType = 
+export type MetricType =
     | 'historical'
-    | 'latest' 
+    | 'latest'
+
+export type CategoryKey =
+    | 'company_id'
+    | 'fiscal_year'
 
 export type OperationType =
     | 'average'
@@ -44,97 +59,7 @@ const modeToOperation: {
     historical: 'average'
 }
 
-export const keyToLabel = {
-  RAGR: "Risk-Adjusted Growth Rate",
-  economic_profit: "Economic Profit",
-  rcr_perc_harm: "Risk Contribution Ratio (harm %)"
-}
-
-export const chartDescriptionOptions: Record<ChartViewOption, string> = {
-    RAGR__historical : "Total Historical Risk-Adjusted Growth Rate per year.",
-    RAGR__latest : "Latest Risk-Adjusted Growth Rate per company.",
-
-    economic_profit__historical : "Total Historical Economic Profit per year.",
-    economic_profit__latest : "Latest Economic Profit per company.",
-
-    rcr_perc_harm__historical : "Total Historical Risk Contribution Ratio (harm %) per year.",
-    rcr_perc_harm__latest : "Latest Risk Contribution Ratio (harm %) per company."
-}
-
-export const tooltipDescriptions = {
-  RAGR__latest: "Latest Risk-Adjusted Growth",
-  RAGR__historical: "Historical Risk-Adjusted Growth",
-
-  economic_profit__latest: "Latest Economic Profit",
-  economic_profit__historical: "Historical Economic Profit",
-
-  rcr_perc_harm__latest: "Latest Harm Contribution",
-  rcr_perc_harm__historical: "Historical Harm Contribution"
-};
-
-
-
-
-/**
- * Get chart data for the selected views. 
- * @param data : app data { companies, stats }
- * @param selectedOptions : list of selected view options
- * @returns Data for charts
- */
-export const getChartsSelection = (data: DashboadData, selectedOptions: ChartViewOption[]) => {
-    const selectionParams = []
-    for( const selectedOption of selectedOptions){
-        const [ property, mode ] = selectedOption.split('__') as [ FieldKey, MetricType ]
-
-        const _orderingKey: CategoryKey | null = mode === 'historical' && 'fiscal_year' || mode === 'latest'&& 'company_id' || null
-     
-        if(!_orderingKey) throw Error('Incorrect data')
-
-        const params = {
-            orderingKey: _orderingKey,
-            computorKey: property || '',
-            operation: modeToOperation[ mode ] || ''
-        }
-        selectionParams.push( params )
-    }
-
-    const computedData = selectionParams.map( paramsDatum => {
-        const result = computeChartData(
-            data,
-            paramsDatum.orderingKey,
-            paramsDatum.computorKey,
-            paramsDatum.operation
-        )
-        return result
-    })
-
-    return computedData
-}
-
-export const COMPANY_COLORS: Record<number, string> = {
-  1860: "#8EC5FC", // Apple – soft blue
-  1861: "#A8E6CF", // Amazon – pastel mint
-  1862: "#FFD3B6", // Meta – soft peach
-  1863: "#FFAAA5", // Microsoft – muted coral
-  1864: "#D5AAFF", // Google – pastel violet
-  1865: "#FFECB3", // Tesla – soft amber
-  1866: "#BEE7E8", // Nvidia – pastel cyan
-  1867: "#CBAACB", // Intel – dusty lavender
-  1868: "#F6C1C7", // AMD – soft pink
-  1869: "#CDE7BE", // Qualcomm – pastel green
-  1870: "#B5C7ED", // Samsung – soft indigo
-  1871: "#E2F0CB", // Sony – pale lime
-  1872: "#F7D9E3", // Sony – pastel rose
-  1873: "#D0F0FD", // Sony – light sky blue
-  1874: "#FEE2B3", // Sony – soft peachy yellow
-  1875: "#E3D4FF", // Sony – pastel lavender
-  1876: "#B0E3D0", // Sony – minty green
-  1877: "#FFD6E0", // Sony – pastel pink
-  1878: "#C6DFFF", // Sony – baby blue
-  1879: "#FFF3B0"  // Sony – soft yellow
-};
-
-export const configSelectionOptions : ChartViewOption[] = [
+export const configSelectionOptions: ChartViewOption[] = [
     "RAGR__historical",
     "RAGR__latest",
     "economic_profit__historical",
@@ -143,18 +68,123 @@ export const configSelectionOptions : ChartViewOption[] = [
     "rcr_perc_harm__latest",
 ]
 
+export const keyToLabel = {
+    RAGR: "Risk-Adjusted Growth Rate",
+    economic_profit: "Economic Profit",
+    rcr_perc_harm: "Risk Contribution Ratio (harm %)"
+}
+
+/** Text for business features */
+export const metricTextMap: Record<Exclude<ChartViewOption, ''>, {
+    chartTitle: string;
+    chartDescription: string;
+    insightTitle: string;
+    chartTooltip: string;
+}> = {
+    RAGR__latest: {
+        chartTitle: 'Risk-Adjusted Growth Rate',
+        chartDescription: 'Latest Risk-Adjusted Growth Rate per company.',
+        insightTitle: 'Avg. Annual Growth',
+        chartTooltip: 'Latest Risk-Adjusted Growth',
+    },
+    RAGR__historical: {
+        chartTitle: 'Risk-Adjusted Growth Rate',
+        chartDescription: 'Total Historical Risk-Adjusted Growth Rate per year.',
+        insightTitle: 'Growth Trend',
+        chartTooltip: 'Historical Risk-Adjusted Growth',
+    },
+    rcr_perc_harm__latest: {
+        chartTitle: 'Risk Contribution Ratio (harm %)',
+        chartDescription: 'Latest Risk Contribution Ratio (harm %) per company.',
+        insightTitle: 'Avg. Harm Contribution',
+        chartTooltip: 'Latest Harm Contribution',
+    },
+    rcr_perc_harm__historical: {
+        chartTitle: 'Risk Contribution Ratio (harm %)',
+        chartDescription: 'Total Historical Risk Contribution Ratio (harm %) per year.',
+        insightTitle: 'Harm Contribution Trend',
+        chartTooltip: 'Historical Harm Contribution',
+    },
+    economic_profit__latest: {
+        chartTitle: 'Economic Profit',
+        chartDescription: 'Latest Economic Profit per company.',
+        insightTitle: 'Total Economic Profit',
+        chartTooltip: 'Latest Economic Profit',
+    },
+    economic_profit__historical: {
+        chartTitle: 'Economic Profit',
+        chartDescription: 'Total Historical Economic Profit per year.',
+        insightTitle: 'Economic Profit Trend',
+        chartTooltip: 'Historical Economic Profit',
+    },
+}
+
+/**
+ * Get chart data for the selected views. 
+ * @param data : app data { companies, stats }
+ * @param selectedOptions : list of selected view options
+ * @returns Data for charts
+ */
+export const getChartsSelection = (data: DashboadData, selectedOptions: ChartViewOption[]) => {
+    return selectedOptions.map(selectedOption => {
+        if (!selectedOption) return null
+
+        const [property, mode] = selectedOption.split('__') as [FieldKey, MetricType]
+        const _orderingKey: CategoryKey = mode === 'historical' ? 'fiscal_year' : 'company_id'
+
+        return computeChartData(
+            data,
+            _orderingKey,
+            property || '',
+            modeToOperation[mode] || ''
+        )
+    })
+}
 
 export const configSelectionMap = [
-    { metric: 'RAGR', type: 'historical'},
-    { metric: 'RAGR', type: 'latest'},
-    { metric: 'economic_profit', type: 'historical'},
-    { metric: 'economic_profit', type: 'latest'},
-    { metric: 'rcr_perc_harm', type: 'historical'},
-    { metric: 'rcr_perc_harm', type: 'latest'},
+    { metric: 'RAGR', type: 'latest' },
+    { metric: 'RAGR', type: 'historical' },
+    { metric: 'economic_profit', type: 'latest' },
+    { metric: 'economic_profit', type: 'historical' },
+    { metric: 'rcr_perc_harm', type: 'latest' },
+    { metric: 'rcr_perc_harm', type: 'historical' },
 ] as const
 
+export const COMPANY_COLORS: Record<number, string> = {
+    1860: "#DCDDE1", // Apple
+    1861: "#FFD19A", // Amazon
+    1862: "#A6C8FB", // Meta
+    1863: "#A8D8F5", // Microsoft
+    1864: "#FDE9A0", // Google
+    1865: "#F8B4B4", // Tesla
+    1866: "#C6E896", // Nvidia
+    1867: "#A6D4F5", // Intel
+    1868: "#F8B5B8", // AMD
+    1869: "#B5C4F8", // Qualcomm
+    1870: "#B0BAF0", // Samsung
+    1871: "#C2D4E8", // Sony
+    1872: "#B8CBE0", // Sony
+    1873: "#CCD9E8", // Sony
+    1874: "#B5C8DC", // Sony
+    1875: "#C8D5E4", // Sony
+    1876: "#BCC8DC", // Sony
+    1877: "#D0DBEA", // Sony
+    1878: "#BAC5DC", // Sony
+    1879: "#CDD8E8"  // Sony
+};
+
+
+
+
+
+const PERCENT_METRICS: MetricKey[] = ['rcr_perc_harm', 'RAGR']
+
+export const formatMetricValue = (key: string, value: number): string => {
+    if (PERCENT_METRICS.includes(key as MetricKey)) return `${(value * 100).toFixed(2)}%`
+    return `~ ${Math.ceil(value)}`
+}
 
 export const metricDescription = {
-  historical: 'Track metric trends over years to identify patterns, growth, and changes.\nOrdered chronologically by fiscal year.',
-  latest: 'Compare current metric values across companies to identify leaders and outliers.\nOrdered by performance from highest to lowest.',
+    historical: 'Track metric trends over years to identify patterns, growth, and changes.\n* Ordered chronologically by fiscal year.',
+    latest: 'Compare current metric values across companies to identify leaders and outliers.\n* Ordered by performance from highest to lowest.',
 }
