@@ -48,6 +48,7 @@ export function InsightChart<T extends Record<string, unknown>>({
   XAxisKey,
   YAxisKey,
   type,
+  tooltipLabelFormatter,
 }: ChartProps<T>) {
   const ShapeChart = type === "historical" ? LineChart : BarChart;
   const isHistorical = type === "historical";
@@ -113,6 +114,9 @@ export function InsightChart<T extends Record<string, unknown>>({
               content={
                 <ChartTooltipContent
                   className="w-40"
+                  {...(tooltipLabelFormatter && {
+                    labelFormatter: tooltipLabelFormatter,
+                  })}
                 />
               }
             />

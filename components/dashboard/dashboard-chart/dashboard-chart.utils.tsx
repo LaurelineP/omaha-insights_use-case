@@ -1,8 +1,7 @@
 /**
  * @fileoverview Dashboard Chart Utilities
- * Uses 'any' for groupBy data to align with utility function expectations.
+ * Computes and formats chart data for visualization.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { groupBy } from "@/lib/utils";
 
@@ -50,7 +49,7 @@ export const computeChartData = (
     let UIChartData: Array<Record<string, number | string>> = []
     
     // Groups per "orderingKey"
-    const groupedByOrderingKey = groupBy(data.stats as any[], orderingKey) // TODO: should be agnostic
+    const groupedByOrderingKey = groupBy(data.stats, orderingKey)
 
     // Per "orderingValue" (x axis key), loops to access the list of info
     for( const [ orderingValue, detailsList ] of groupedByOrderingKey ){
