@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 
 
 // TODO: place it to global utils
-export const groupBy = (arr: Record<string, unknown>[], key: string) => {
+export const groupBy = (arr: Record<string, number>[], key: string) => {
     const dataMap = new Map()
     for( const data of arr ){
 

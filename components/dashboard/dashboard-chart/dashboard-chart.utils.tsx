@@ -1,12 +1,9 @@
-import { DashboadData, StatData } from "@/types/data.types";
-import { IChartData } from "./dashboard-chart.types";
-import { ChartConfig } from "../ui/chart";
 import { groupBy } from "@/lib/utils";
 
-
-
-// type MetricKey = 'RAGR' | 'economic_profit' | 'rcr_per_harm'
-
+import type { ChartConfig } from "@/components/ui/chart";
+import type { DashboadData } from "@/types/data.types";
+import type { IChartData } from "./dashboard-chart.types";
+import { COMPANY_COLORS, type FieldKey } from "../dashboard-features";
 
 export function  getSumDetailsByKeys(  data: IChartData[], views: string[] ){
     if(!views.length || !data?.length) return;
@@ -14,9 +11,9 @@ export function  getSumDetailsByKeys(  data: IChartData[], views: string[] ){
     /** Init Views details */
     const _views : Record<string, number> = {}
 
-    /* Makes on object out of views with the matched value in data */
-    for( const dataItem of data){
-        for (const view of views){
+    /* Builds splitted views */
+    for (const view of views){
+        for( const dataItem of data){
 
             /* Sets property in _views */
             if( !_views.hasOwnProperty( view ) ){
@@ -28,21 +25,26 @@ export function  getSumDetailsByKeys(  data: IChartData[], views: string[] ){
                 _views[ view ] += dataItem[ view ]
             }
         }
+        _views[ view ] =  Number(_views[ view ].toFixed(2))
     }
     return _views
 }
 
 
-/** Compute App raw data to chart data (line or bar charts)*/
+/** Compute App raw data to chart data (line or bar charts)
+ * - reorganize and manipulate data
+ * - computed chart data base on params
+*/
 export const computeChartData = (
     data: DashboadData,
-    orderingKey: keyof StatData,
-    computorKey: keyof StatData, operation: 'average' | 'latest'
+    orderingKey: FieldKey,
+    computorKey: FieldKey,
+    operation: 'average' | 'latest'
 )=> {
-    const UIChartData: Array<Record<string, number | string>> = []
+    let UIChartData: Array<Record<string, number | string>> = []
     
-    // Group per "orderingKey"
-    const groupedByOrderingKey = groupBy(data.stats, orderingKey)
+    // Groups per "orderingKey"
+    const groupedByOrderingKey = groupBy(data.stats, orderingKey) // TODO: should be agnostic
 
     // Per "orderingValue" (x axis key), loops to access the list of info
     for( const [ orderingValue, detailsList ] of groupedByOrderingKey ){
@@ -51,44 +53,50 @@ export const computeChartData = (
             continue
         }
 
-        // From list of info, sums the values of `computorKey` (y axis key)
+        // From the info list, sums the values of `computorKey` (y axis key)
         const summedValue = detailsList.reduce(
-            (acc: number, curr) => acc += (curr[computorKey] ?? 0)
-        ,0 )
+            (acc: number, curr: { [x: string]: number; }) => acc += (curr[computorKey] ?? 0)
+        , 0 )
 
         const operations = {
             average: detailsList.length ? summedValue / detailsList.length : 0,
             latest: detailsList.at(-1)[ computorKey ]
         }
 
+        
         // Format to data chart
-        // const average = detailsList.length ? summedValue / detailsList.length : 0
+        console.log('orderingKey:', orderingKey)
         const UIChartDatum = {
             [orderingKey]: orderingValue,
-            [computorKey]: operations[ operation ]
+            [computorKey]: operations[ operation ],
         }
+
         UIChartData.push(UIChartDatum)
     }
-    console.log('UIChartData:', UIChartData)
+
+    if(operation === 'latest'){
+        UIChartData = UIChartData.sort((a, b ) => {
+            if ( typeof b[ computorKey ] === 'number' && typeof a[ computorKey ] === "number"){
+                return b[ computorKey ] - a[ computorKey ]
+            }
+            return 0
+        })
+    }
+
     return UIChartData
 }
-/// Example
-// const averageRAGRPerYear = computeChartData( _data_, 'fiscal_year', 'RAGR', 'average' )
 
 
 export const createChartConfig = (infoList: string[], description: string) : ChartConfig => {
   const config: ChartConfig = {} 
+  const [xAxisKey, yAxisKey ] = infoList
   for( const index in infoList){
     const info = infoList[index]
-
     config[ info ] = {
       label: info.replaceAll(/[-_]/g, ' '),
-      color: `var(--chart-${index + 1})`,
+      color: 'var(--chart-3)',
     }
   }
   config.views = { label: description }
   return config
 }
-/// Example
-// const ownChartConfig = createChartConfig(['fiscal_year', 'RAGR'], 'Historic Average of RAGR')
-

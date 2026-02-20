@@ -1,4 +1,6 @@
 import { ChartConfig } from "@/components/ui/chart";
+import { ReactNode } from "react";
+import { Payload } from "recharts/types/component/DefaultLegendContent";
 
 export interface InsightChartHeader {
   views: string[], // list of view to diplay for a chart
@@ -22,6 +24,7 @@ export interface ChartProps<TDataItem> {
   cardHeader?: InsightChartHeader;
   XAxisKey: string;
   YAxisKey: string;
+  tooltipLabelFormatter?:  (label: string | number, payload: Payload) => ReactNode; 
   type: 'historical' | 'latest'
 };
 

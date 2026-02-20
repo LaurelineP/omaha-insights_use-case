@@ -1,5 +1,5 @@
 export interface CompanyData {
-    customer_id: string;
+    company_id: string;
     name: string;
     description: string;
 }
@@ -16,5 +16,5 @@ export interface StatData {
 
 export interface DashboadData {
     companies: CompanyData[]
-    stats: StatData[]
+    stats: StatData[] 
 }
