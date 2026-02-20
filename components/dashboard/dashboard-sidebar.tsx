@@ -1,4 +1,4 @@
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup } from "../sidebar";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup } from "../ui/sidebar";
 
 export default function DashboardSidebar(){
     return (

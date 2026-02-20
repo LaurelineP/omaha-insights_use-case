@@ -1,6 +1,11 @@
 "use client";
-import { DashboardChart } from "@/components/ui/dashboard/dashboard-chart";
+import { ChartBarHorizontal } from "@/components/dashboard/barchart-example";
+import { DashboardChart } from "@/components/dashboard/dashboard-chart";
+import { InsightChart } from "@/components/dashboard/dashboard-chart copy";
+import { chartConfig, chartData } from "@/components/dashboard/dashboard-chart.data";
+import { createChartConfig, getAverageData, groupBy, mapAverageRAGR } from "@/components/dashboard/dashboard-chart.utils";
 import { DashboadData } from "@/types/data.types";
+import { BarChartHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Dashboard() {
@@ -12,6 +17,62 @@ export default function Dashboard() {
       .then(setData);
   }, []);
 
+
+
+
+  
+  // data?.stats && groupBy(data?.stats, "company_id")
+
+   const chartProps = {
+    data: chartData,
+    config: chartConfig,
+    cardHeader: {
+      views: ['desktop', 'mobile'],
+      title: 'Bar Chart - Interactive',
+      description: 'Showing total visitors for the last 3 months'
+    },
+    XAxisKey: 'date',
+    type: 'historical'
+  }
+
+  const chartPropsOwn = {
+    data: data && getAverageData(data, 'fiscal_year', 'RAGR', 'average') || [],
+    config:  createChartConfig(['fiscal_year', 'RAGR'], "All RAGR average"),
+    cardHeader: {
+      views: ['RAGR'],
+      title: 'RAGR Evolution',
+      description: 'Showing total visitors for the last 3 months'
+    },
+    XAxisKey: 'fiscal_year',
+    type: 'historical'
+  }
+
+  // const chartPropsOwnBar = {
+  // //  const RAGRresult = getAverageData( _data_, 'company_id', 'RAGR', 'latest' )
+  //   data: data && getAverageData(data, 'company_id', 'RAGR', 'latest') || [],
+  //   config:  createChartConfig(['company_id', 'RAGR'], "Latest values"),
+  //   cardHeader: {
+  //     views: ['RAGR'],
+  //     title: 'RAGR Evolution',
+  //     description: 'Showing total visitors for the last 3 months'
+  //   },
+  //   XAxisKey: 'company_id',
+  //   type: 'latest'
+  // }
+
+  const chartPropsOwnBar = {
+  data: data ? getAverageData(data, 'company_id', 'RAGR', 'latest') : [],
+  config: createChartConfig(['company_id', 'RAGR'], "Latest RAGR per company"),
+  cardHeader: {
+    views: ['RAGR'],
+    title: 'RAGR Snapshot',
+    description: 'Showing latest RAGR per company'
+  },
+  XAxisKey: 'company_id', // ← company on x-axis
+  type: 'latest'
+}
+
+  console.log('chartPropsOwn', chartPropsOwn)
   return (
     <div
       id="Dashboard"
@@ -24,6 +85,13 @@ export default function Dashboard() {
         <DashboardChart />
         <DashboardChart />
       </div>
+      <>
+        {/* <InsightChart {...chartProps}/> */}
+        <InsightChart {...chartPropsOwn}/> { /* line */}
+        <InsightChart {...chartPropsOwnBar}/>  { /* Bar */}
+        <ChartBarHorizontal />
+      </>
+     
     </div>
   );
 }

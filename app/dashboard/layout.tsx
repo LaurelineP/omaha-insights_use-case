@@ -1,4 +1,4 @@
-import DashboardSidebar from "@/components/ui/dashboard/dashboard-sidebar";
+import DashboardSidebar from "@/components/dashboard/dashboard-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
