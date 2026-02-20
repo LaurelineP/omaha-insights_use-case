@@ -70,7 +70,6 @@ export const computeChartData = (
 
         
         // Format to data chart
-        console.log('orderingKey:', orderingKey)
         const UIChartDatum = {
             [orderingKey]: orderingValue,
             [computorKey]: operations[ operation ],

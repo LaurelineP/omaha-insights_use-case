@@ -34,6 +34,7 @@ import {
 
 import { getSumDetailsByKeys } from "./dashboard-chart.utils";
 import { ChartProps } from "./dashboard-chart.types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Insight Chart Card - chart component within a card that can be a line or bar chart
@@ -41,15 +42,22 @@ import { ChartProps } from "./dashboard-chart.types";
  *  - `type` latest: displays a bar chart
  *  UI rel.: Card / recharts chart ( LineChart + Line / BarChart + Bar )
  */
-export function InsightChart<T extends Record<string, unknown>>({
-  data,
-  config,
-  cardHeader,
-  XAxisKey,
-  YAxisKey,
-  type,
-  tooltipLabelFormatter,
-}: ChartProps<T>) {
+export function InsightChart<T extends Record<string, unknown>>(props: ChartProps<T>) {
+
+  if(!props?.data) return <ChartSkeleton />
+
+  const {
+    data,
+    config,
+    cardHeader,
+    XAxisKey,
+    YAxisKey,
+    type,
+    tooltipLabelFormatter,
+  } = props
+
+
+
   const ShapeChart = type === "historical" ? LineChart : BarChart;
   const isHistorical = type === "historical";
   const isLatest = type === "latest";
@@ -180,7 +188,7 @@ export const ChartCardHeader = ({
   if (!data || !cardHeader) return null;
 
   return (
-  <CardHeader className="flex flex-col items-stretch border-b p-0 sm:flex-row">
+    <CardHeader className="flex flex-col items-stretch border-b p-0 sm:flex-row">
           <div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:py-0">
             <CardTitle>{cardHeader.title}</CardTitle>
             <CardDescription>{cardHeader.description}</CardDescription>
@@ -215,3 +223,19 @@ export const ChartCardHeader = ({
   );
 };
 
+export const ChartSkeleton = () => {
+  return <Card className="flex relative h-full">
+      <CardHeader className="flex h-1/3">
+        <Skeleton className="w-2/3 h-full"/>
+        <Skeleton className="w-1/3 h-full"/>
+      </CardHeader>
+      <CardContent className="px-6 w-full h-full">
+        <Skeleton className="relative h-full flex">
+        <p className="absolute mt-[15%] mx-[32%] text-gray-400">
+          Awaiting for chart data ...
+        </p>
+          </Skeleton>
+        
+      </CardContent>
+  </Card>
+}

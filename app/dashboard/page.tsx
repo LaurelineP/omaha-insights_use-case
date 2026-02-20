@@ -9,15 +9,18 @@
 import { InsightChart } from "@/components/dashboard/dashboard-chart/dashboard-chart";
 import { createChartConfig } from "@/components/dashboard/dashboard-chart/dashboard-chart.utils";
 import { CategoryKey, chartDescriptionOptions, ChartViewOption, getChartsSelection, MetricKey, MetricType, tooltipDescriptions } from "@/components/dashboard/dashboard-features";
+import { DashboardContext } from "@/context/dashboard.context";
 import { DashboadData } from "@/types/data.types";
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Payload } from "recharts/types/component/DefaultLegendContent";
 
 export default function Dashboard() {
   const [data, setData] = useState<DashboadData | null>(null);
-  const [ chartsSeletion ] = useState<ChartViewOption[]>(
-    ['RAGR__latest', 'economic_profit__historical', 'rcr_perc_harm__historical' ]
-  )
+  const { selectedCharts } = useContext(DashboardContext)
+  console.log('view main selectedCharts:', selectedCharts)
+  // const [ chartsSeletion ] = useState<ChartViewOption[]>(
+  //   ['RAGR__latest', 'economic_profit__historical', 'rcr_perc_harm__historical' ]
+  // )
   useEffect(() => {
     fetch("/data.json")
       .then((res) => res.json())
@@ -27,9 +30,9 @@ export default function Dashboard() {
   // Data formated for chart
   const selectedChartData = useMemo(() => {
       if(!data) return []
-        const values = getChartsSelection(data, chartsSeletion)
+        const values = getChartsSelection(data, selectedCharts)
         return values
-    }, [data, chartsSeletion])
+    }, [data, selectedCharts])
 
 
 
@@ -89,7 +92,8 @@ export default function Dashboard() {
     }
   }
 
-  const [ chartOne, chartTwo, chartThree ] = chartsSeletion.map((chartOption: ChartViewOption, idx) => {
+  const [ chartOne, chartTwo, chartThree ] = selectedCharts.map((chartOption: ChartViewOption, idx) => {
+    if(!chartOption) return {}
     const [ metric, mode ] = chartOption.split('__') as [MetricKey, MetricType]
     const YAxisKey: CategoryKey = mode === "historical" ? 'fiscal_year' : 'company_id'
     return createInsightChartProps(mode, metric as MetricKey, YAxisKey, selectedChartData?.[idx])
@@ -104,7 +108,8 @@ export default function Dashboard() {
         </div>
         <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
           <InsightChart {...chartTwo} />
-          <InsightChart {...chartThree} />
+          {/* <InsightChart {...chartThree} /> */}
+          <InsightChart />
         </div>
     </div>
   )

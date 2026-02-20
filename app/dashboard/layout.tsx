@@ -1,13 +1,26 @@
 import DashboardSidebar from "@/components/dashboard/dashboard-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { DashboardProvider, DashboardContext } from "@/context/dashboard.context";
+
+
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
-        <SidebarProvider>
-            <DashboardSidebar />
-            <main className="w-full">
-                {children}
-            </main>
-        </SidebarProvider>
+        <DashboardProvider>
+            <SidebarProvider
+                style={
+                    {
+                    "--sidebar-width": "20rem",
+                    "--sidebar-width-mobile": "20rem",
+                    } as React.CSSProperties
+                }
+            >
+                <DashboardSidebar />
+                <main className="w-full">
+                    {children}
+                </main>
+            </SidebarProvider>
+        </DashboardProvider>
     )
 }
+

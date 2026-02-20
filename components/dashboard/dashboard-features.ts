@@ -35,7 +35,7 @@ export type FieldKey = CategoryKey | MetricKey
 /** View Option: representative string of view selection
  * - composed of both data property key and the type of view
   */
-export type ChartViewOption = `${MetricKey}__${MetricType}`
+export type ChartViewOption = `${MetricKey}__${MetricType}` | ''
 
 const modeToOperation: {
     [ key in MetricType ]: OperationType
@@ -133,3 +133,28 @@ export const COMPANY_COLORS: Record<number, string> = {
   1878: "#C6DFFF", // Sony – baby blue
   1879: "#FFF3B0"  // Sony – soft yellow
 };
+
+export const configSelectionOptions : ChartViewOption[] = [
+    "RAGR__historical",
+    "RAGR__latest",
+    "economic_profit__historical",
+    "economic_profit__latest",
+    "rcr_perc_harm__historical",
+    "rcr_perc_harm__latest",
+]
+
+
+export const configSelectionMap = [
+    { metric: 'RAGR', type: 'historical'},
+    { metric: 'RAGR', type: 'latest'},
+    { metric: 'economic_profit', type: 'historical'},
+    { metric: 'economic_profit', type: 'latest'},
+    { metric: 'rcr_perc_harm', type: 'historical'},
+    { metric: 'rcr_perc_harm', type: 'latest'},
+] as const
+
+
+export const metricDescription = {
+  historical: 'Track metric trends over years to identify patterns, growth, and changes.\nOrdered chronologically by fiscal year.',
+  latest: 'Compare current metric values across companies to identify leaders and outliers.\nOrdered by performance from highest to lowest.',
+}
