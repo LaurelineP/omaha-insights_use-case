@@ -6,9 +6,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 "use client"
-import { InsightChart } from "@/components/dashboard/dashboard-chart/dashboard-chart";
+import { DashboardChart } from "@/components/dashboard/dashboard-chart/dashboard-chart";
 import { createChartConfig } from "@/components/dashboard/dashboard-chart/dashboard-chart.utils";
-import { CategoryKey, ChartViewOption, formatMetricValue, getChartsSelection, MetricKey, MetricType, metricTextMap } from "@/components/dashboard/dashboard-features";
+import { CategoryKey, ChartViewOption, formatMetricValue, getChartsSelection, MetricKey, MetricType, metricTextMap, metricIconMap } from "@/components/dashboard/dashboard-features";
 import { DashboardContext } from "@/context/dashboard.context";
 import { DashboadData } from "@/types/data.types";
 import { useContext, useEffect, useMemo, useState } from "react";
@@ -72,6 +72,8 @@ export default function Dashboard() {
   
     const selectedKey: ChartViewOption = `${XAxisKey}__${type}`
     const chartConfigArgs = [XAxisKey, YAxisKey];
+    const IconComponent = metricIconMap[XAxisKey];
+    const icon = <IconComponent className="w-6 h-6" />;
 
     return {
       data,
@@ -80,6 +82,7 @@ export default function Dashboard() {
       YAxisKey,
       tooltipLabelFormatter,
       valueFormatter: (value: number) => formatMetricValue(XAxisKey, value),
+      icon,
       cardHeader: {
         views         : data?.length ? [XAxisKey] : [],
         title         : <p className="capitalize">{cardTitle.replaceAll('_', ' ')}</p>,
@@ -89,12 +92,12 @@ export default function Dashboard() {
       config: createChartConfig(
         chartConfigArgs,
         metricTextMap[ selectedKey ].chartTooltip
-      ),
+      )
     }
   }
 
-  const [ chartOne, chartTwo, chartThree ] = (selectedCharts as ChartViewOption[])
-    .map((chartOption, idx) => {
+  const [ chartOne, chartTwo, chartThree ] = (Array.isArray(selectedCharts) ? selectedCharts : [])
+    ?.map((chartOption, idx) => {
       if(!chartOption) return {}
       const [ metric, mode ] = chartOption.split('__') as [MetricKey, MetricType]
       const YAxisKey: CategoryKey = mode === "historical" ? 'fiscal_year' : 'company_id'
@@ -111,11 +114,11 @@ export default function Dashboard() {
       className="h-full w-full bg-slate-100 flex flex-col justify-center gap-4 px-6 py-6"
     >
         <div className="w-full flex-1 min-h-0">
-          <InsightChart {...(chartOne as any)} />
+          <DashboardChart {...(chartOne as any)} />
         </div>
         <div className="w-full flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InsightChart {...(chartTwo as any)} />
-          <InsightChart {...(chartThree as any)}/>
+          <DashboardChart {...(chartTwo as any)} />
+          <DashboardChart {...(chartThree as any)}/>
         </div>
     </div>
   )

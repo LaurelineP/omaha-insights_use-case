@@ -1,4 +1,5 @@
 
+
 import { ComponentProps, ReactNode } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
@@ -20,25 +21,20 @@ export const CheckboxField = ({
   ...props
 }: CheckboxFieldProps) => {
   return (
-    <div className = { cn("cursor-pointer flex items-center ", !!props?.className && props.className ,  isDisabled && "hover:cursor-not-allowed")} { ...props }>
-      <Field
-        orientation     = "horizontal"
-        aria-disabled   = { isDisabled }
-        >
+    <div className={cn("cursor-pointer flex items-center", props?.className)} {...props}>
+      <Field orientation="horizontal" aria-disabled={isDisabled} suppressHydrationWarning={true}>
         <Checkbox
           id            = { name }
           name          = { name }
           checked       = { checked }
+          color         = "bg-primary"
           aria-disabled = { isDisabled }
-          color         = "bg-indigo-900"
+          suppressHydrationWarning={true}
         />
         <Label
-          className = {cn(
-            "text-xs text-sidebar-foreground w-full",
-            isDisabled && "text-gray-400"
-          )}
-          htmlFor       = { name }
-          aria-disabled = { isDisabled }
+          className="text-xs text-sidebar-foreground w-full"
+          htmlFor={name}
+          aria-disabled={isDisabled}
         >
           { children }
         </Label>

@@ -1,8 +1,7 @@
 
 import { DashboadData } from "@/types/data.types"
 import { computeChartData } from "./dashboard-chart/dashboard-chart.utils"
-
-/* ------------------------------------ - ----------------------------------- */
+import { TrendingUp, BarChart3, Target } from "lucide-react"
 /* -------------------------------------------------------------------------- *
  *                 * Business Features decisions code related                 *
  * -------------------------------------------------------------------------- *
@@ -72,6 +71,13 @@ export const keyToLabel = {
     RAGR: "Risk-Adjusted Growth Rate",
     economic_profit: "Economic Profit",
     rcr_perc_harm: "Risk Contribution Ratio (harm %)"
+}
+
+/** Icon mapping for each metric - stores icon component references */
+export const metricIconMap: Record<MetricKey, typeof TrendingUp> = {
+    RAGR: TrendingUp,
+    economic_profit: BarChart3,
+    rcr_perc_harm: Target,
 }
 
 /** Text for business features */
