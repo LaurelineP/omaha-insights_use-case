@@ -33,11 +33,11 @@ export function DashboardProvider({ children }: PropsWithChildren) {
     Array(3).fill("")
   );
   // Track if we've loaded from localStorage this component lifetime
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoadedLS, setIsLoadedLS] = useState(false);
 
-  // Load from localStorage on mount AND when component remounts (navigation)
+  // When mounting and remounts, load selection from localStorage
   useEffect(() => {
-    if (!isLoaded) {
+    if (!isLoadedLS) {
       try {
         const stored = localStorage.getItem(LOCALSTORE_SELECTION);
         if (stored) {
@@ -47,13 +47,13 @@ export function DashboardProvider({ children }: PropsWithChildren) {
       } catch(error) {
         console.error(error)
       }
-      setIsLoaded(true);
+      setIsLoadedLS(true);
     }
-  }, [isLoaded]);
+  }, [isLoadedLS]);
 
   // Persist any changes (initialization or UI updates) to localStorage
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoadedLS) {
       try {
         localStorage.setItem(
           LOCALSTORE_SELECTION,
@@ -63,7 +63,7 @@ export function DashboardProvider({ children }: PropsWithChildren) {
         console.error("Failed to persist selection");
       }
     }
-  }, [selectedCharts, isLoaded]);
+  }, [selectedCharts, isLoadedLS]);
 
   return (
     <DashboardContext.Provider value={{ selectedCharts, setSelectedCharts }}>
