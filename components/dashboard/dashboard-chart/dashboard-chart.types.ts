@@ -7,7 +7,7 @@ export interface InsightChartHeader {
   description: string
 }
 
-export interface InsightChart<TDataItem> {
+export interface DashboardChart<TDataItem> {
   data: TDataItem[];
   type: 'historical' | 'latest',
   header?: InsightChartHeader,
@@ -23,10 +23,10 @@ export interface ChartProps<TDataItem> {
   cardHeader?: InsightChartHeader;
   XAxisKey: string;
   YAxisKey: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tooltipLabelFormatter?: (label: any, payload: any[]) => ReactNode;
+  tooltipLabelFormatter?: (label: unknown, payload: unknown[]) => ReactNode;
   valueFormatter?: (value: number) => string;
-  type: 'historical' | 'latest'
+  type: 'historical' | 'latest';
+  icon?: ReactNode;
 };
 
 

@@ -42,3 +42,5 @@ next-env.d.ts
 
 # personal
 **/*__*
+**/_*
+.vscode/launch.json

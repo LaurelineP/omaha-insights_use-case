@@ -48,7 +48,7 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
   --animate-shake: shake 1s ease-in-out infinite;
-  --animate-rotate: rotate  ease infinite;
+  --animate-rotate: rotate 20s ease infinite;
 }
 
 :root {
