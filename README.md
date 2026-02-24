@@ -1,12 +1,20 @@
 # Omaha Dashboard Challenge - Ziggy Asset Management
 
+
+🚀 See project: [Ziggy Portfolio Insights](https://omaha-insights-ziggy.netlify.app/)
+
+[![Netlify Status](https://api.netlify.com/api/v1/badges/88351e33-dba4-409f-b0aa-7f3fb4f3d3eb/deploy-status)](https://app.netlify.com/projects/omaha-insights-ziggy/deploys)
+
 ## Project Overview
 
 **Ziggy Asset Management** manages a portfolio of twenty major companies (including Apple, Amazon, Meta, and Microsoft). The objective of this project is to build a **client-facing dashboard** that provides investors with a clear and insightful view of their portfolio through data visualization.
 
 The final submission must be **production-ready**.
 
-## Requirements
+
+---
+---
+## 📌 Requirements
 
 <details>
 	<summary><strong>1. Functionality</strong></summary>
@@ -54,7 +62,7 @@ The final submission must be **production-ready**.
 
 ---
 
-# Development & Notes
+## 💻 Development & Notes
 <details>
     <summary> Run the project </summary>
     <pre>pnpm install</pre>
