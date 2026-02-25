@@ -15,7 +15,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { Payload } from "recharts/types/component/DefaultLegendContent";
 
 export default function Dashboard() {
-  const [data, setData] = useState<DashboadData | null>(null);
+  const [ data, setData ] = useState<DashboadData | null>(null);
   const { selectedCharts } = useContext(DashboardContext)
 
   useEffect(() => {
@@ -27,7 +27,11 @@ export default function Dashboard() {
   // Formats data for chart
   const selectedChartData = useMemo(() => {
     if(!data) return []
-      const values = getChartsSelection(data, selectedCharts as ChartViewOption[])
+      const values = getChartsSelection(
+        data,
+        selectedCharts as ChartViewOption[],
+        ["fiscal_year"]
+      )
       return values
   }, [data, selectedCharts])
 
@@ -98,25 +102,29 @@ export default function Dashboard() {
 
   const [ chartOne, chartTwo, chartThree ] = (Array.isArray(selectedCharts) ? selectedCharts : [])
     ?.map((chartOption, idx) => {
-      if(!chartOption) return {}
+      const slotSize = idx > 0 ? "compact" : "default";
+      if(!chartOption) return { data: [], size: slotSize }
       const [ metric, mode ] = chartOption.split('__') as [MetricKey, MetricType]
       const YAxisKey: CategoryKey = mode === "historical" ? 'fiscal_year' : 'company_id'
-      return createInsightChartProps(
+      return {
+        ...createInsightChartProps(
         mode,
         metric as MetricKey,
         YAxisKey,
         selectedChartData?.[idx] ?? []
-      )
+        ),
+        size: slotSize
+      }
     })
 
   return (
     <div id="Dashboard"
-      className="h-full w-full bg-slate-100 flex flex-col justify-center gap-4 px-6 py-6"
+      className="h-full w-full pt-10 md:pt-6 bg-slate-100 flex flex-col justify-start gap-4 p-6"
     >
-        <div className="w-full flex-1 min-h-0">
+        <div className="w-full md:min-h-0 md:flex-[1.2]">
           <DashboardChart {...(chartOne as any)} />
         </div>
-        <div className="w-full flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="w-full grid grid-cols-1 gap-4 md:flex-1 md:min-h-0 md:grid-cols-2">
           <DashboardChart {...(chartTwo as any)} />
           <DashboardChart {...(chartThree as any)}/>
         </div>

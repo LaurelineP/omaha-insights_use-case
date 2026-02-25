@@ -27,6 +27,7 @@ export interface ChartProps<TDataItem> {
   valueFormatter?: (value: number) => string;
   type: 'historical' | 'latest';
   icon?: ReactNode;
+  size?: 'default' | 'compact';
 };
 
 

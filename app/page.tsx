@@ -44,7 +44,7 @@ export default function LandingPage() {
         className="absolute opacity-[0.02] pointer-events-none left-1/2 -z-10 -translate-x-1/2 translate-y-1/2 animate-rotate"
       />
 
-      <div className="relative z-10 mx-auto w-full max-w-7xl rounded-3xl bg-linear-to-br from-primary/5 to-primary/10 p-12 shadow-indigo-200/50 shadow-2xl">
+      <div className="relative z-10 mx-auto w-full md:max-w-7xl rounded-3xl bg-linear-to-br from-primary/5 to-primary/10 p-12 shadow-indigo-200/50 shadow-2xl">
         <div className="mx-auto w-full max-w-7xl rounded-3xl bg-linear-to-br from-primary/5 to-primary/10 p-12 shadow-indigo-200/50 shadow-2xl">
           {/* Hero Section */}
           <header className="mx-auto w-full px-4 py-8 text-center">
@@ -62,9 +62,9 @@ export default function LandingPage() {
           <Separator className="bg-primary-foreground"/>
 
           {/* Features Section */}
-          <section className="mx-auto w-full px-4">
-            <div className="flex w-full flex-col items-center justify-center gap-8 py-6 md:flex-row md:justify-around">
-                <div className="w-full md:w-auto">
+          <section className="mx-auto w-full px-0 sm:px-4">
+            <div className="flex w-full flex-col gap-6 items-center py-16 md:pt-14 md:pb-6 md:flex-row md:justify-around">
+                <div className="w-full md:w-auto ">
                   <div className="w-full max-w-md">
                     <h2 className="mb-6 text-center text-2xl font-bold text-foreground sm:text-3xl">
                       Smart Portfolio Visualizations

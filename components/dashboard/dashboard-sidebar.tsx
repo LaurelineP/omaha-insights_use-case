@@ -95,7 +95,7 @@ export default function DashboardSidebar() {
   };
   
   return (
-    <Sidebar className="bg-sidebar-primary shadow-xl ">
+    <Sidebar className="bg-sidebar-primary shadow-xl" >
       {/* ----------------------------- Sidebar Header ----------------------------- */}
       <SidebarHeader className="px-4 pt-6 leading-4">
         <div className="flex gap-2 items-center">
@@ -194,7 +194,7 @@ export default function DashboardSidebar() {
                           isDisabled={isDisabled}
                           checked={isSelelected}
                         >
-                          <div className="flex w-full justify-between h-5">
+                          <div className="flex w-full justify-between items-center h-5">
                             <span className="inline">
                               {metricTextMap[option.fieldKey].chartTooltip}
                             </span>

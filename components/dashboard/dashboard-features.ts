@@ -129,21 +129,23 @@ export const metricTextMap: Record<Exclude<ChartViewOption, ''>, {
  * Get chart data for the selected views. 
  * @param data : app data { companies, stats }
  * @param selectedOptions : list of selected view options
+ * @param selectedOptions : list of keys to get 
  * @returns Data for charts
  */
-export const getChartsSelection = (data: DashboadData, selectedOptions: ChartViewOption[]) => {
+export const getChartsSelection = (data: DashboadData, selectedOptions: ChartViewOption[], extraKeys?: FieldKey[] ) => {
     return selectedOptions.map(selectedOption => {
         if (!selectedOption) return null
 
         const [property, mode] = selectedOption.split('__') as [FieldKey, MetricType]
         const _orderingKey: CategoryKey = mode === 'historical' ? 'fiscal_year' : 'company_id'
 
-        return computeChartData(
+        return computeChartData({
             data,
-            _orderingKey,
-            property || '',
-            modeToOperation[mode] || ''
-        )
+            orderingKey: _orderingKey,
+            computorKey: property || '',
+            operation: modeToOperation[mode] || '',
+            ...extraKeys?.length && { agnosticKeys: extraKeys }
+        })
     })
 }
 
@@ -192,5 +194,5 @@ export const formatMetricValue = (key: string, value: number): string => {
 
 export const metricDescription = {
     historical: 'Track metric trends over years to identify patterns, growth, and changes.\n* Ordered chronologically by fiscal year.',
-    latest: 'Compare current metric values across companies to identify leaders and outliers.\n* Ordered by performance from highest to lowest.',
+    latest: 'Compares each company’s latest-year metric value to surface leaders and outliers.\n* Ordered by performance from highest to lowest',
 }

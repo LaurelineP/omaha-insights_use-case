@@ -39,7 +39,7 @@ export function getMetricDetailsByKeys(data: IChartData[], views: string[]) {
 export function getSumDetailsByKeys(data: IChartData[], views: string[]) {
   if (!views.length || !data?.length) return;
 
-  /** Init Views details */
+  /* Init Views details */
   const _views: Record<string, number> = {};
 
   /* Builds splitted views */
@@ -61,28 +61,36 @@ export function getSumDetailsByKeys(data: IChartData[], views: string[]) {
 }
 
 /** Compute App raw data to chart data (line or bar charts)
- * - reorganize and manipulate data
- * - compute charts' data base on params
+ * - groups and reshapes source data
+ * - computes chart data base on selected options
+ * @param data : raw data to process
+ * @param orderingKey : grouping key to position items on the axis
+ * @param computorKey : metric key used to compute data
+ * @param operation   : aggregation mode to apply
+ * @param agnosticKeys: optional keys expected to remain constant within each group
  */
-export const computeChartData = (
+export const computeChartData = ({ data, orderingKey, computorKey, operation, agnosticKeys }: {
   data: DashboadData,
+  operation: "average" | "latest",
   orderingKey: FieldKey,
   computorKey: FieldKey,
-  operation: "average" | "latest"
-) => {
+  agnosticKeys?: FieldKey[]
+}) => {
   let UIChartData: Array<Record<string, number | string>> = [];
 
-  // Groups per "orderingKey"
+  /* Groups per "orderingKey" */
   const groupedByOrderingKey = groupBy(data.stats, orderingKey);
 
-  // Per "orderingValue" (x axis key), loops to access the list of info
+  /* Per "orderingValue" (x axis key), loops to access the list of info */
   for (const [orderingValue, detailsList] of groupedByOrderingKey) {
     if (!detailsList?.length) {
-      UIChartData.push({ [orderingKey]: orderingValue });
+      UIChartData.push({
+        [orderingKey]: orderingValue,
+      });
       continue;
     }
 
-    // From the info list, sums the values of `computorKey` (y axis key)
+    /* From the info list, sums the values of `computorKey` (y axis key) */
     const summedValue = detailsList.reduce(
       (acc: number, curr: { [x: string]: number }) =>
         (acc += curr[computorKey] ?? 0),
@@ -94,15 +102,22 @@ export const computeChartData = (
       latest: detailsList.at(-1)[computorKey],
     };
 
-    // Format to data chart
+    /* Formats to chart data */
     const UIChartDatum = {
       [orderingKey]: orderingValue,
       [computorKey]: operations[operation],
     };
 
+    /* Adds extra chart data - invariant field from grouped data */
+    if( agnosticKeys ){
+      for(const agnosticKey of agnosticKeys ){
+        UIChartDatum[agnosticKey] = detailsList.at(-1)[agnosticKey]
+      }
+    }
     UIChartData.push(UIChartDatum);
   }
 
+  /* Orders by `computorKey` DESC */
   if (operation === "latest") {
     UIChartData = UIChartData.sort((a, b) => {
       if (
@@ -114,8 +129,7 @@ export const computeChartData = (
       return 0;
     });
   }
-
-  return UIChartData;
+ return UIChartData;
 };
 
 export const createChartConfig = (
